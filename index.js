@@ -30,17 +30,18 @@ app.get("/test-db", async (req, res) => {
 app.get("/series", async (req, res) => {
   try {
     const result = await pool.query(`
-SELECT id, series_code
-FROM bearing_series
-ORDER BY series_code
+      SELECT id, series_code
+      FROM public.bearing_series
+      ORDER BY series_code
     `);
 
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch bearing series" });
+    console.error("SERIES ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
