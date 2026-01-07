@@ -26,6 +26,22 @@ app.get("/test-db", async (req, res) => {
   }
 });
 
+// ✅ Get all bearing series
+app.get("/series", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT id, series_code, bearing_type, description
+      FROM bearing_series
+      ORDER BY series_code
+    `);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch bearing series" });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Bearings API running on port ${PORT}`);
