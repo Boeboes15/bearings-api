@@ -42,11 +42,11 @@ app.get("/debug-db", async (req, res) => {
 // ✅ Get all bearing series
 app.get("/series", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT id, series_code
-      FROM public.bearing_series
-      ORDER BY series_code
-    `);
+   const result = await pool.query(`
+  SELECT id, series_code
+  FROM bearing_series
+  ORDER BY series_code
+`); 
 
     res.json(result.rows);
   } catch (err) {
