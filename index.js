@@ -6,18 +6,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 🔑 DATABASE CONNECTION (EXPLICIT + SAFE)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
-  options: '-c search_path=public'
 });
 
-// ✅ Health check (Railway loves this)
+// 🟢 Health check
 app.get("/", (req, res) => {
   res.json({ status: "Bearings API running 🚀" });
 });
 
-// ✅ Test DB connection
+// 🧪 Test DB connection
 app.get("/test-db", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW()");
@@ -27,11 +27,13 @@ app.get("/test-db", async (req, res) => {
   }
 });
 
-// 🔍 Debug: show current database & schema
+// 🔍 Debug database + schema
 app.get("/debug-db", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT current_database(), current_schema();
+      SELECT 
+        current_database() AS database,
+        current_schema() AS schema
     `);
     res.json(result.rows[0]);
   } catch (err) {
@@ -39,15 +41,29 @@ app.get("/debug-db", async (req, res) => {
   }
 });
 
-// ✅ Get all bearing series
+// 🔍 Debug tables (THIS WILL PROVE IT)
+app.get("/debug-tables", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT tablename
+      FROM pg_tables
+      WHERE schemaname = 'public'
+      ORDER BY tablename
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✅ GET ALL BEARING SERIES (FORCED SCHEMA)
 app.get("/series", async (req, res) => {
   try {
-   const result = await pool.query(`
-  SELECT id, series_code
-  FROM bearing_series
-  ORDER BY series_code
-`); 
-
+    const result = await pool.query(`
+      SELECT id, series_code
+      FROM public.bearing_series
+      ORDER BY series_code
+    `);
     res.json(result.rows);
   } catch (err) {
     console.error("SERIES ERROR:", err);
@@ -55,7 +71,7 @@ app.get("/series", async (req, res) => {
   }
 });
 
-
+// 🚀 START SERVER
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Bearings API running on port ${PORT}`);
