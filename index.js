@@ -30,9 +30,9 @@ app.get("/test-db", async (req, res) => {
 app.get("/series", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, series_code, bearing_type, description
-      FROM bearing_series
-      ORDER BY series_code
+SELECT id, series_code
+FROM bearing_series
+ORDER BY series_code
     `);
 
     res.json(result.rows);
