@@ -26,6 +26,18 @@ app.get("/test-db", async (req, res) => {
   }
 });
 
+// 🔍 Debug: show current database & schema
+app.get("/debug-db", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT current_database(), current_schema();
+    `);
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ✅ Get all bearing series
 app.get("/series", async (req, res) => {
   try {
