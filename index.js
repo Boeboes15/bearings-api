@@ -59,11 +59,11 @@ app.get("/debug-tables", async (req, res) => {
 // ✅ GET ALL BEARING SERIES (FORCED SCHEMA)
 app.get("/series", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT id, series_code
-      FROM public.bearing_series
-      ORDER BY series_code
-    `);
+   const result = await pool.query(`
+  SELECT id, series_code
+  FROM "bearing_series"
+  ORDER BY series_code
+`); 
     res.json(result.rows);
   } catch (err) {
     console.error("SERIES ERROR:", err);
