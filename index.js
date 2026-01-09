@@ -61,7 +61,7 @@ app.get("/series", async (req, res) => {
   try {
    const result = await pool.query(`
   SELECT id, series_code
-  FROM "bearing_series"
+  FROM public.bearing_series
   ORDER BY series_code
 `); 
     res.json(result.rows);
