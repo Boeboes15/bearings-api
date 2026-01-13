@@ -41,7 +41,7 @@ app.get("/debug-db", async (req, res) => {
   }
 });
 
-// 🔍 Debug tables (THIS WILL PROVE IT)
+// 🔍 Debug tables (CONFIRM TABLES EXIST)
 app.get("/debug-tables", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -56,14 +56,14 @@ app.get("/debug-tables", async (req, res) => {
   }
 });
 
-// ✅ GET ALL BEARING SERIES (FORCED SCHEMA)
+// ✅ GET ALL BEARING SERIES
 app.get("/series", async (req, res) => {
   try {
-   const result = await pool.query(`
-  SELECT id, series_code
-  FROM public.bearing_series
-  ORDER BY series_code
-`); 
+    const result = await pool.query(`
+      SELECT id, series_code
+      FROM public.bearing_series
+      ORDER BY series_code
+    `);
     res.json(result.rows);
   } catch (err) {
     console.error("SERIES ERROR:", err);
@@ -71,7 +71,26 @@ app.get("/series", async (req, res) => {
   }
 });
 
-// 🚀 START SERVER
+// ✅ GET ALL BEARINGS (THIS IS WHAT FLUTTER USES)
+app.get("/bearings", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        code,
+        name,
+        description
+      FROM public.bearings
+      ORDER BY code
+    `);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("BEARINGS ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 🚀 START SERVER (ALWAYS LAST)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Bearings API running on port ${PORT}`);
