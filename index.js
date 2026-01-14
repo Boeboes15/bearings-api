@@ -90,6 +90,25 @@ app.get("/bearings", async (req, res) => {
   }
 });
 
+// 🔗 GET ALL CHAINS
+app.get("/chains", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        code,
+        name,
+        description
+      FROM public.chains
+      ORDER BY code
+    `);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("CHAINS ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 🚀 START SERVER (ALWAYS LAST)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
