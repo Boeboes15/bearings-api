@@ -79,7 +79,7 @@ app.get("/bearings", async (req, res) => {
         code,
         name,
         description
-      FROM public.bearings
+      FROM public.bearings_prod
       ORDER BY code
     `);
 
