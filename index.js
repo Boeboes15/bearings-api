@@ -109,6 +109,35 @@ app.get("/chains", async (req, res) => {
   }
 });
 
+// 📦 GET PRODUCTS BY CATEGORY (NEW)
+app.get("/products", async (req, res) => {
+  try {
+    const { category } = req.query;
+
+    if (!category) {
+      return res.status(400).json({ error: "Category is required" });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT
+        code,
+        name,
+        description
+      FROM public.bearings_prod
+      WHERE category = $1
+      ORDER BY code
+      `,
+      [category]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error("PRODUCTS ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 🚀 START SERVER (ALWAYS LAST)
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
