@@ -42,52 +42,7 @@ app.get("/debug-tables", async (req, res) => {
   }
 });
 
-// ----------------------------------------------------
-// ✅ MAIN SEARCH ENDPOINT (GLOBAL SEARCH)
-// ----------------------------------------------------
-// GET /items
-// GET /items?search=6205
-// Returns: Bearings + Chains (+ Couplings later if needed)
-// ----------------------------------------------------
-app.get("/items", async (req, res) => {
-  try {
-    const { search } = req.query;
-
-    const query = `
-      SELECT code, name, description, 'bearing' AS type
-      FROM public.bearings_prod
-
-      UNION ALL
-
-      SELECT code, name, description, 'chain' AS type
-      FROM public.chains
-    `;
-
-    const result = await pool.query(query);
-
-    let items = result.rows;
-
-    if (search) {
-      const s = search.toLowerCase();
-      items = items.filter(
-        (item) =>
-          item.code.toLowerCase().includes(s) ||
-          item.name.toLowerCase().includes(s)
-      );
-    }
-
-    res.json(items);
-  } catch (err) {
-    console.error("ITEMS ERROR:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ----------------------------------------------------
-// 🔒 LEGACY ENDPOINTS (USED BY CURRENT UI)
-// ----------------------------------------------------
-
-// 🟡 BEARINGS
+// 🔩 BEARINGS
 app.get("/bearings", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -97,7 +52,6 @@ app.get("/bearings", async (req, res) => {
     `);
     res.json(result.rows);
   } catch (err) {
-    console.error("BEARINGS ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -112,7 +66,6 @@ app.get("/chains", async (req, res) => {
     `);
     res.json(result.rows);
   } catch (err) {
-    console.error("CHAINS ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -127,7 +80,6 @@ app.get("/couplings", async (req, res) => {
     `);
     res.json(result.rows);
   } catch (err) {
-    console.error("COUPLINGS ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
