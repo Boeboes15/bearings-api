@@ -43,14 +43,11 @@ app.get("/debug-tables", async (req, res) => {
 });
 
 // ----------------------------------------------------
-// ✅ OPTION 2 — MAIN ENDPOINT (CODE-BASED SEARCH)
+// ✅ MAIN SEARCH ENDPOINT (GLOBAL SEARCH)
 // ----------------------------------------------------
-// Flutter should use THIS endpoint going forward
-//
 // GET /items
 // GET /items?search=6205
-//
-// Returns: Bearings + Chains (later V-belts, sprockets)
+// Returns: Bearings + Chains (+ Couplings later if needed)
 // ----------------------------------------------------
 app.get("/items", async (req, res) => {
   try {
@@ -70,7 +67,6 @@ app.get("/items", async (req, res) => {
 
     let items = result.rows;
 
-    // Optional code/name filtering
     if (search) {
       const s = search.toLowerCase();
       items = items.filter(
@@ -88,8 +84,10 @@ app.get("/items", async (req, res) => {
 });
 
 // ----------------------------------------------------
-// 🔒 LEGACY ENDPOINTS (KEEP — DO NOT BREAK OLD UI)
+// 🔒 LEGACY ENDPOINTS (USED BY CURRENT UI)
 // ----------------------------------------------------
+
+// 🟡 BEARINGS
 app.get("/bearings", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -104,6 +102,7 @@ app.get("/bearings", async (req, res) => {
   }
 });
 
+// 🔗 CHAINS
 app.get("/chains", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -114,6 +113,21 @@ app.get("/chains", async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     console.error("CHAINS ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 🔩 COUPLINGS
+app.get("/couplings", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT code, name, description, size
+      FROM public.couplings
+      ORDER BY code
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("COUPLINGS ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
