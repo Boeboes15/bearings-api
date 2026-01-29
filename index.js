@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔑 DATABASE CONNECTION (EXPLICIT + SAFE)
+// 🔑 DATABASE CONNECTION
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
@@ -27,21 +27,7 @@ app.get("/test-db", async (req, res) => {
   }
 });
 
-// 🔍 Debug database + schema
-app.get("/debug-db", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT 
-        current_database() AS database,
-        current_schema() AS schema
-    `);
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 🔍 Debug tables (CONFIRM TABLES EXIST)
+// 🔍 Debug tables
 app.get("/debug-tables", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -56,33 +42,61 @@ app.get("/debug-tables", async (req, res) => {
   }
 });
 
-// ✅ GET ALL BEARING SERIES
-app.get("/series", async (req, res) => {
+// ----------------------------------------------------
+// ✅ OPTION 2 — MAIN ENDPOINT (CODE-BASED SEARCH)
+// ----------------------------------------------------
+// Flutter should use THIS endpoint going forward
+//
+// GET /items
+// GET /items?search=6205
+//
+// Returns: Bearings + Chains (later V-belts, sprockets)
+// ----------------------------------------------------
+app.get("/items", async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT id, series_code
-      FROM public.bearing_series
-      ORDER BY series_code
-    `);
-    res.json(result.rows);
+    const { search } = req.query;
+
+    const query = `
+      SELECT code, name, description, 'bearing' AS type
+      FROM public.bearings_prod
+
+      UNION ALL
+
+      SELECT code, name, description, 'chain' AS type
+      FROM public.chains
+    `;
+
+    const result = await pool.query(query);
+
+    let items = result.rows;
+
+    // Optional code/name filtering
+    if (search) {
+      const s = search.toLowerCase();
+      items = items.filter(
+        (item) =>
+          item.code.toLowerCase().includes(s) ||
+          item.name.toLowerCase().includes(s)
+      );
+    }
+
+    res.json(items);
   } catch (err) {
-    console.error("SERIES ERROR:", err);
+    console.error("ITEMS ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ GET ALL BEARINGS (THIS IS WHAT FLUTTER USES)
+// ----------------------------------------------------
+// 🔒 LEGACY ENDPOINTS (KEEP — DO NOT BREAK OLD UI)
+// ----------------------------------------------------
 app.get("/bearings", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT
-        code,
-        name,
-        description
+      SELECT code, name, description
       FROM public.bearings_prod
       ORDER BY code
     `);
-
     res.json(result.rows);
   } catch (err) {
     console.error("BEARINGS ERROR:", err);
@@ -90,18 +104,13 @@ app.get("/bearings", async (req, res) => {
   }
 });
 
-// 🔗 GET ALL CHAINS
 app.get("/chains", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT
-        code,
-        name,
-        description
+      SELECT code, name, description
       FROM public.chains
       ORDER BY code
     `);
-
     res.json(result.rows);
   } catch (err) {
     console.error("CHAINS ERROR:", err);
@@ -109,36 +118,7 @@ app.get("/chains", async (req, res) => {
   }
 });
 
-// 📦 GET PRODUCTS BY CATEGORY (NEW)
-app.get("/products", async (req, res) => {
-  try {
-    const { category } = req.query;
-
-    if (!category) {
-      return res.status(400).json({ error: "Category is required" });
-    }
-
-    const result = await pool.query(
-      `
-      SELECT
-        code,
-        name,
-        description
-      FROM public.bearings_prod
-      WHERE category = $1
-      ORDER BY code
-      `,
-      [category]
-    );
-
-    res.json(result.rows);
-  } catch (err) {
-    console.error("PRODUCTS ERROR:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 🚀 START SERVER (ALWAYS LAST)
+// 🚀 START SERVER
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Bearings API running on port ${PORT}`);
