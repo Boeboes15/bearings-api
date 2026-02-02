@@ -112,6 +112,20 @@ app.get("/locking-elements", async (req, res) => {
   }
 });
 
+// ⚙️ SPROCKETS
+app.get("/sprockets", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT code, name, description, size
+      FROM public.sprockets
+      ORDER BY code
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 🚀 START SERVER
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
